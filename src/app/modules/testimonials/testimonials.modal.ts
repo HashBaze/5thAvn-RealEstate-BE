@@ -1,6 +1,6 @@
 import mongoose from "mongoose";
 
-const clienrtesTimonialsScheema = new mongoose.Schema({
+const  ClientTestimonialsSchema = new mongoose.Schema({
   picture: {
     type: String,
     required: false,
@@ -29,6 +29,6 @@ const clienrtesTimonialsScheema = new mongoose.Schema({
   },
 });
 
-const ClientTestimonials = mongoose.model("ClientTestimonials", clienrtesTimonialsScheema);
+const ClientTestimonials = mongoose.model("ClientTestimonials", ClientTestimonialsSchema);
 
 export default ClientTestimonials;
