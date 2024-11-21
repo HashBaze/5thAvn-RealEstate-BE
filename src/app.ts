@@ -4,7 +4,7 @@ import mailRoute from "./email/mail.route";
 import userRouter from "./app/modules/user/user.route";
 import blogRouter from "./app/modules/blog/blog.route";
 import testimonialsRouter from "./app/modules/testimonials/testimonials.route";
-
+import graphqlRouter from "./app/modules/graphql/graphql.route";
 
 const app: Application = express();
 
@@ -22,5 +22,6 @@ app.use("/mail", mailRoute);
 app.use("/user", userRouter);
 app.use("/blog", blogRouter);
 app.use("/testimonials", testimonialsRouter);
+app.use("/graphql", graphqlRouter);
 
 export default app;
