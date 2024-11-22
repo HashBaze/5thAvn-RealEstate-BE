@@ -2,11 +2,13 @@ import { Request, Response } from "express";
 import { DocumentNode, gql } from "@apollo/client/core";
 import createApolloClient from "./config/apolloClient";
 import {
+  GETALLLANDSALE,
   GETALLPROPERTIES,
   GETALLRESIDANTALRENT,
   GETALLRESIDANTALSALE,
   GETPROPERTYBYID,
 } from "./graphql.querys";
+import { FilteredProperty, PropertyNode } from "./graphql.interface";
 
 async function handleGraphQLRequest(
   req: Request,
@@ -81,15 +83,18 @@ async function getByFilter(req: Request, res: Response): Promise<void> {
     bathRooms,
   } = req.body;
 
-  console.log(req.body);
 
   if (isSelected == "Sell") {
     query = gql`
       ${GETALLRESIDANTALSALE}
     `;
-  } else {
+  } else if(isSelected == "Rent") {
     query = gql`
       ${GETALLRESIDANTALRENT}
+    `;
+  } else {
+    query = gql`
+      ${GETALLLANDSALE}
     `;
   }
 
@@ -99,41 +104,6 @@ async function getByFilter(req: Request, res: Response): Promise<void> {
     const response = await client.query({
       query,
     });
-
-    interface PropertyNode {
-      id: string;
-      formattedAddress: string;
-      price: number;
-      headline: string;
-      listingDetails: {
-        bedrooms: number;
-        bathrooms: number;
-        garageSpaces: number;
-        outdoorFeatures: string[];
-        heatingCoolingFeatures: string[];
-      };
-      propertyType: string;
-      thumbnailSquare: string;
-      landSize: string;
-    }
-
-    interface FilteredProperty {
-      id: string;
-      formattedAddress: string;
-      price: number;
-      listingDetails: {
-        bedrooms: number;
-        bathrooms: number;
-        garageSpaces: number;
-        outdoorFeatures: string[];
-        heatingCoolingFeatures: string[];
-      };
-      propertyType: string;
-      thumbnailSquare: string;
-      isSelected: boolean;
-      headline: string;
-      landSize: string;
-    }
 
     const filteredResponse: FilteredProperty[] = response.data.properties.edges
       .map(({ node }: { node: PropertyNode }) => ({
@@ -267,15 +237,18 @@ async function getByFilterByPagination(
     page = 1,
   } = req.body;
 
-  console.log(req.body);
 
   if (isSelected == "Sell") {
     query = gql`
       ${GETALLRESIDANTALSALE}
     `;
-  } else {
+  } else if(isSelected == "Rent") {
     query = gql`
       ${GETALLRESIDANTALRENT}
+    `;
+  } else {
+    query = gql`
+      ${GETALLLANDSALE}
     `;
   }
 
@@ -285,41 +258,6 @@ async function getByFilterByPagination(
     const response = await client.query({
       query,
     });
-
-    interface PropertyNode {
-      id: string;
-      formattedAddress: string;
-      price: number;
-      headline: string;
-      listingDetails: {
-        bedrooms: number;
-        bathrooms: number;
-        garageSpaces: number;
-        outdoorFeatures: string[];
-        heatingCoolingFeatures: string[];
-      };
-      propertyType: string;
-      thumbnailSquare: string;
-      landSize: string;
-    }
-
-    interface FilteredProperty {
-      id: string;
-      formattedAddress: string;
-      price: number;
-      listingDetails: {
-        bedrooms: number;
-        bathrooms: number;
-        garageSpaces: number;
-        outdoorFeatures: string[];
-        heatingCoolingFeatures: string[];
-      };
-      propertyType: string;
-      thumbnailSquare: string;
-      isSelected: boolean;
-      headline: string;
-      landSize: string;
-    }
 
     const filteredResponse: FilteredProperty[] = response.data.properties.edges
       .map(({ node }: { node: PropertyNode }) => ({
@@ -412,7 +350,7 @@ async function getByFilterByPagination(
         }
 
         if (houseCategory && houseCategory !== " ") {
-          if (property.propertyType !== houseCategory) {
+          if (isSelected != 'Land' && property.propertyType !== houseCategory) {
             return null;
           }
         }

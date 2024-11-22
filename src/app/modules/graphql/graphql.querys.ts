@@ -62,6 +62,8 @@ export const GETPROPERTYBYID: string = `
       landSize
       status
       daysOnMarket
+      longitude
+      latitude
       listingDetails {
         ... on ResidentialSale {
           auctionLocation
@@ -140,6 +142,45 @@ export const GETALLRESIDANTALSALE = `{
 
 export const GETALLRESIDANTALRENT = `{
     properties(listingType: [RESIDENTIAL_RENTAL]) {
+        totalCount
+        edges {
+        node {
+          id
+          formattedAddress
+          landSize
+          soldDate
+          status
+          price
+          listingType
+          headline
+          propertyType
+          thumbnailSquare
+          listingDetails {
+            ... on ResidentialRental {
+              auctionLocation
+              carportSpaces
+              openCarSpaces
+              bathrooms
+              bedrooms
+              garageSpaces
+              outdoorFeatures
+              heatingCoolingFeatures
+            }
+          }
+        }
+        cursor
+      }
+      pageInfo {
+        hasNextPage
+        hasPreviousPage
+        endCursor
+        startCursor
+      }
+    }
+}`;
+
+export const GETALLLANDSALE = `{
+    properties(listingType: [LAND]) {
         totalCount
         edges {
         node {
