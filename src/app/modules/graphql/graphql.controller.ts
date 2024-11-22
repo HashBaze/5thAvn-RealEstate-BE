@@ -9,6 +9,7 @@ import {
   GETPROPERTYBYID,
 } from "./graphql.querys";
 import { FilteredProperty, PropertyNode } from "./graphql.interface";
+import { PropertyFeatures, PropertyType } from "./graphql.enum";
 
 async function handleGraphQLRequest(
   req: Request,
@@ -84,11 +85,11 @@ async function getByFilter(req: Request, res: Response): Promise<void> {
   } = req.body;
 
 
-  if (isSelected == "Sell") {
+  if (isSelected == PropertyType.SALE) {
     query = gql`
       ${GETALLRESIDANTALSALE}
     `;
-  } else if(isSelected == "Rent") {
+  } else if(isSelected == PropertyType.RENT) {
     query = gql`
       ${GETALLRESIDANTALRENT}
     `;
@@ -166,7 +167,7 @@ async function getByFilter(req: Request, res: Response): Promise<void> {
         if (airConditioning) {
           if (
             !property.listingDetails.heatingCoolingFeatures.includes(
-              "AIR_CONDITIONING"
+              PropertyFeatures.AIR_CONDITIONING
             )
           ) {
             return null;
@@ -176,10 +177,10 @@ async function getByFilter(req: Request, res: Response): Promise<void> {
         if (pool) {
           if (
             !property.listingDetails.outdoorFeatures.includes(
-              "SWIMMING_POOL_IN_GROUND"
+              PropertyFeatures.SWIMMING_POOL_IN_GROUND
             ) ||
             !property.listingDetails.outdoorFeatures.includes(
-              "SWIMMING_POOL_ABOVE_GROUND"
+              PropertyFeatures.SWIMMING_POOL_ABOVE_GROUND
             )
           ) {
             return null;
@@ -188,7 +189,7 @@ async function getByFilter(req: Request, res: Response): Promise<void> {
 
         if (secaurity) {
           if (
-            !property.listingDetails.outdoorFeatures.includes("SECURE_PARKING")
+            !property.listingDetails.outdoorFeatures.includes(PropertyFeatures.SECURE_PARKING)
           ) {
             return null;
           }
@@ -238,11 +239,11 @@ async function getByFilterByPagination(
   } = req.body;
 
 
-  if (isSelected == "Sell") {
+  if (isSelected == PropertyType.SALE) {
     query = gql`
       ${GETALLRESIDANTALSALE}
     `;
-  } else if(isSelected == "Rent") {
+  } else if(isSelected == PropertyType.RENT) {
     query = gql`
       ${GETALLRESIDANTALRENT}
     `;
@@ -321,7 +322,7 @@ async function getByFilterByPagination(
         if (airConditioning) {
           if (
             !property.listingDetails.heatingCoolingFeatures.includes(
-              "AIR_CONDITIONING"
+              PropertyFeatures.AIR_CONDITIONING
             )
           ) {
             return null;
@@ -331,10 +332,10 @@ async function getByFilterByPagination(
         if (pool) {
           if (
             !property.listingDetails.outdoorFeatures.includes(
-              "SWIMMING_POOL_IN_GROUND"
+              PropertyFeatures.SWIMMING_POOL_IN_GROUND
             ) &&
             !property.listingDetails.outdoorFeatures.includes(
-              "SWIMMING_POOL_ABOVE_GROUND"
+              PropertyFeatures.SWIMMING_POOL_ABOVE_GROUND
             )
           ) {
             return null;
@@ -343,14 +344,14 @@ async function getByFilterByPagination(
 
         if (secaurity) {
           if (
-            !property.listingDetails.outdoorFeatures.includes("SECURE_PARKING")
+            !property.listingDetails.outdoorFeatures.includes(PropertyFeatures.SECURE_PARKING)
           ) {
             return null;
           }
         }
 
         if (houseCategory && houseCategory !== " ") {
-          if (isSelected != 'Land' && property.propertyType !== houseCategory) {
+          if (isSelected != PropertyType.LAND && property.propertyType !== houseCategory) {
             return null;
           }
         }
