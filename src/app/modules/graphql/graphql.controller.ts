@@ -83,7 +83,7 @@ async function getByFilter(req: Request, res: Response): Promise<void> {
 
   console.log(req.body);
 
-  if (isSelected == "Sell") {
+  if (isSelected == "Sele") {
     query = gql`
       ${GETALLRESIDANTALSALE}
     `;
@@ -269,7 +269,7 @@ async function getByFilterByPagination(
 
   console.log(req.body);
 
-  if (isSelected == "Sell") {
+  if (isSelected == "Sele") {
     query = gql`
       ${GETALLRESIDANTALSALE}
     `;
