@@ -2,11 +2,14 @@ import { Request, Response } from "express";
 import { DocumentNode, gql } from "@apollo/client/core";
 import createApolloClient from "./config/apolloClient";
 import {
+  GETALLLANDSALE,
   GETALLPROPERTIES,
   GETALLRESIDANTALRENT,
   GETALLRESIDANTALSALE,
   GETPROPERTYBYID,
 } from "./graphql.querys";
+import { FilteredProperty, PropertyNode } from "./graphql.interface";
+import { PropertyFeatures, PropertyType } from "./graphql.enum";
 
 async function handleGraphQLRequest(
   req: Request,
@@ -81,15 +84,18 @@ async function getByFilter(req: Request, res: Response): Promise<void> {
     bathRooms,
   } = req.body;
 
-  console.log(req.body);
 
-  if (isSelected == "Sell") {
+  if (isSelected == PropertyType.SALE) {
     query = gql`
       ${GETALLRESIDANTALSALE}
     `;
-  } else {
+  } else if(isSelected == PropertyType.RENT) {
     query = gql`
       ${GETALLRESIDANTALRENT}
+    `;
+  } else {
+    query = gql`
+      ${GETALLLANDSALE}
     `;
   }
 
@@ -99,41 +105,6 @@ async function getByFilter(req: Request, res: Response): Promise<void> {
     const response = await client.query({
       query,
     });
-
-    interface PropertyNode {
-      id: string;
-      formattedAddress: string;
-      price: number;
-      headline: string;
-      listingDetails: {
-        bedrooms: number;
-        bathrooms: number;
-        garageSpaces: number;
-        outdoorFeatures: string[];
-        heatingCoolingFeatures: string[];
-      };
-      propertyType: string;
-      thumbnailSquare: string;
-      landSize: string;
-    }
-
-    interface FilteredProperty {
-      id: string;
-      formattedAddress: string;
-      price: number;
-      listingDetails: {
-        bedrooms: number;
-        bathrooms: number;
-        garageSpaces: number;
-        outdoorFeatures: string[];
-        heatingCoolingFeatures: string[];
-      };
-      propertyType: string;
-      thumbnailSquare: string;
-      isSelected: boolean;
-      headline: string;
-      landSize: string;
-    }
 
     const filteredResponse: FilteredProperty[] = response.data.properties.edges
       .map(({ node }: { node: PropertyNode }) => ({
@@ -196,7 +167,7 @@ async function getByFilter(req: Request, res: Response): Promise<void> {
         if (airConditioning) {
           if (
             !property.listingDetails.heatingCoolingFeatures.includes(
-              "AIR_CONDITIONING"
+              PropertyFeatures.AIR_CONDITIONING
             )
           ) {
             return null;
@@ -206,10 +177,10 @@ async function getByFilter(req: Request, res: Response): Promise<void> {
         if (pool) {
           if (
             !property.listingDetails.outdoorFeatures.includes(
-              "SWIMMING_POOL_IN_GROUND"
+              PropertyFeatures.SWIMMING_POOL_IN_GROUND
             ) ||
             !property.listingDetails.outdoorFeatures.includes(
-              "SWIMMING_POOL_ABOVE_GROUND"
+              PropertyFeatures.SWIMMING_POOL_ABOVE_GROUND
             )
           ) {
             return null;
@@ -218,7 +189,7 @@ async function getByFilter(req: Request, res: Response): Promise<void> {
 
         if (secaurity) {
           if (
-            !property.listingDetails.outdoorFeatures.includes("SECURE_PARKING")
+            !property.listingDetails.outdoorFeatures.includes(PropertyFeatures.SECURE_PARKING)
           ) {
             return null;
           }
@@ -267,15 +238,18 @@ async function getByFilterByPagination(
     page = 1,
   } = req.body;
 
-  console.log(req.body);
 
-  if (isSelected == "Sell") {
+  if (isSelected == PropertyType.SALE) {
     query = gql`
       ${GETALLRESIDANTALSALE}
     `;
-  } else {
+  } else if(isSelected == PropertyType.RENT) {
     query = gql`
       ${GETALLRESIDANTALRENT}
+    `;
+  } else {
+    query = gql`
+      ${GETALLLANDSALE}
     `;
   }
 
@@ -285,41 +259,6 @@ async function getByFilterByPagination(
     const response = await client.query({
       query,
     });
-
-    interface PropertyNode {
-      id: string;
-      formattedAddress: string;
-      price: number;
-      headline: string;
-      listingDetails: {
-        bedrooms: number;
-        bathrooms: number;
-        garageSpaces: number;
-        outdoorFeatures: string[];
-        heatingCoolingFeatures: string[];
-      };
-      propertyType: string;
-      thumbnailSquare: string;
-      landSize: string;
-    }
-
-    interface FilteredProperty {
-      id: string;
-      formattedAddress: string;
-      price: number;
-      listingDetails: {
-        bedrooms: number;
-        bathrooms: number;
-        garageSpaces: number;
-        outdoorFeatures: string[];
-        heatingCoolingFeatures: string[];
-      };
-      propertyType: string;
-      thumbnailSquare: string;
-      isSelected: boolean;
-      headline: string;
-      landSize: string;
-    }
 
     const filteredResponse: FilteredProperty[] = response.data.properties.edges
       .map(({ node }: { node: PropertyNode }) => ({
@@ -383,7 +322,7 @@ async function getByFilterByPagination(
         if (airConditioning) {
           if (
             !property.listingDetails.heatingCoolingFeatures.includes(
-              "AIR_CONDITIONING"
+              PropertyFeatures.AIR_CONDITIONING
             )
           ) {
             return null;
@@ -393,10 +332,10 @@ async function getByFilterByPagination(
         if (pool) {
           if (
             !property.listingDetails.outdoorFeatures.includes(
-              "SWIMMING_POOL_IN_GROUND"
+              PropertyFeatures.SWIMMING_POOL_IN_GROUND
             ) &&
             !property.listingDetails.outdoorFeatures.includes(
-              "SWIMMING_POOL_ABOVE_GROUND"
+              PropertyFeatures.SWIMMING_POOL_ABOVE_GROUND
             )
           ) {
             return null;
@@ -405,14 +344,14 @@ async function getByFilterByPagination(
 
         if (secaurity) {
           if (
-            !property.listingDetails.outdoorFeatures.includes("SECURE_PARKING")
+            !property.listingDetails.outdoorFeatures.includes(PropertyFeatures.SECURE_PARKING)
           ) {
             return null;
           }
         }
 
         if (houseCategory && houseCategory !== " ") {
-          if (property.propertyType !== houseCategory) {
+          if (isSelected != PropertyType.LAND && property.propertyType !== houseCategory) {
             return null;
           }
         }
