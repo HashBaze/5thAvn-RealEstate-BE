@@ -4,19 +4,20 @@ export const GETALLPROPERTIES: string = `
     $after: String
     $last: Int
     $before: String
-    $status: [PropertyStatusEnum!] # Add the status filter
+    $status: [PropertyStatusEnum!]
   ) {
     properties(
       first: $first
       after: $after
       last: $last
       before: $before
-      status: $status # Pass the status variable
+      status: $status 
     ) {
       totalCount
       edges {
         node {
           id
+          createdAt
           formattedAddress
           landSize
           soldDate
@@ -57,6 +58,7 @@ export const GETPROPERTYBYID: string = `
   query GetSingleProperty($id: ID!) {
     property(id: $id) {
       id
+      createdAt
       brochureTitle
       formattedAddress
       landSize
@@ -92,8 +94,11 @@ export const GETPROPERTYBYID: string = `
       street
       vendors {
         contact {
-          addressLine1
-          addressLine2
+          phoneNumbers{
+            phoneNumber
+            position
+            numberType
+          }
         }
       }
       description
@@ -107,6 +112,7 @@ export const GETALLRESIDANTALSALE = `{
         edges {
         node {
           id
+          createdAt
           formattedAddress
           landSize
           soldDate
@@ -146,6 +152,7 @@ export const GETALLRESIDANTALRENT = `{
         edges {
         node {
           id
+          createdAt
           formattedAddress
           landSize
           soldDate
@@ -185,6 +192,7 @@ export const GETALLLANDSALE = `{
         edges {
         node {
           id
+          createdAt
           formattedAddress
           landSize
           soldDate

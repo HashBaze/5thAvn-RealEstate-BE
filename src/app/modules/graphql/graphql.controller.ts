@@ -34,12 +34,30 @@ async function handleGraphQLRequest(
       variables,
     });
 
-    res.json(response.data);
+    const sortedData = sortPropertiesByCreatedAt(response.data);
+
+    res.json(sortedData);
   } catch (error) {
     console.error("Error making GraphQL request:", (error as Error).message);
     res.status(500).json({ message: "Failed to fetch data from GraphQL API" });
   }
 }
+
+const sortPropertiesByCreatedAt = (data: any) => {
+  const sortedEdges = [...data.properties.edges].sort((a, b) => {
+    const dateA = new Date(a.node.createdAt);
+    const dateB = new Date(b.node.createdAt);
+
+    return dateB.getTime() - dateA.getTime();
+  });
+  return {
+    ...data,
+    properties: {
+      ...data.properties,
+      edges: sortedEdges,
+    },
+  };
+};
 
 async function handleGetSingleProperty(
   req: Request,
@@ -84,12 +102,11 @@ async function getByFilter(req: Request, res: Response): Promise<void> {
     bathRooms,
   } = req.body;
 
-
   if (isSelected == PropertyType.SALE) {
     query = gql`
       ${GETALLRESIDANTALSALE}
     `;
-  } else if(isSelected == PropertyType.RENT) {
+  } else if (isSelected == PropertyType.RENT) {
     query = gql`
       ${GETALLRESIDANTALRENT}
     `;
@@ -189,7 +206,9 @@ async function getByFilter(req: Request, res: Response): Promise<void> {
 
         if (secaurity) {
           if (
-            !property.listingDetails.outdoorFeatures.includes(PropertyFeatures.SECURE_PARKING)
+            !property.listingDetails.outdoorFeatures.includes(
+              PropertyFeatures.SECURE_PARKING
+            )
           ) {
             return null;
           }
@@ -238,12 +257,11 @@ async function getByFilterByPagination(
     page = 1,
   } = req.body;
 
-
   if (isSelected == PropertyType.SALE) {
     query = gql`
       ${GETALLRESIDANTALSALE}
     `;
-  } else if(isSelected == PropertyType.RENT) {
+  } else if (isSelected == PropertyType.RENT) {
     query = gql`
       ${GETALLRESIDANTALRENT}
     `;
@@ -344,14 +362,19 @@ async function getByFilterByPagination(
 
         if (secaurity) {
           if (
-            !property.listingDetails.outdoorFeatures.includes(PropertyFeatures.SECURE_PARKING)
+            !property.listingDetails.outdoorFeatures.includes(
+              PropertyFeatures.SECURE_PARKING
+            )
           ) {
             return null;
           }
         }
 
         if (houseCategory && houseCategory !== " ") {
-          if (isSelected != PropertyType.LAND && property.propertyType !== houseCategory) {
+          if (
+            isSelected != PropertyType.LAND &&
+            property.propertyType !== houseCategory
+          ) {
             return null;
           }
         }
