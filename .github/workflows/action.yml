@@ -1,0 +1,53 @@
+name: Deploy RealEstate Backend
+
+on:
+  push:
+    branches:
+      - staging
+      - develop-qa
+      - master
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v2
+
+      - name: Build Docker image
+        run: |
+          docker build -t real-estate:backend .
+
+      - name: Push Docker image to Docker Hub
+        env:
+          DOCKER_HUB_USERNAME: ${{ secrets.DOCKER_HUB_USERNAME }}
+          DOCKER_HUB_ACCESS_TOKEN: ${{ secrets.DOCKER_HUB_ACCESS_TOKEN }}
+        run: |
+          echo $DOCKER_HUB_ACCESS_TOKEN | docker login -u $DOCKER_HUB_USERNAME --password-stdin
+          docker tag real-estate:backend $DOCKER_HUB_USERNAME/real-estate:backend
+          docker push $DOCKER_HUB_USERNAME/real-estate:backend
+
+      - name: Connect with VPS and deploy
+        uses: appleboy/ssh-action@master
+        with:
+          host: ${{ secrets.HOST }}
+          username: ${{ secrets.USERNAME }}
+          key: ${{ secrets.PRIVATE_KEY }}
+          port: ${{ secrets.SSH_PORT }}
+          script: |
+            mkdir -p /home/tishan/apps/RealEstate
+            cd /home/tishan/apps/RealEstate
+
+            # Pull the latest image from Docker Hub
+            echo "Pulling the latest Docker image for real-estate backend..."
+            docker-compose pull backend
+
+            # Start or restart the container
+            echo "Starting/restarting the real-estate backend container..."
+            docker-compose up -d backend
+
+            # Clean up unused Docker images
+            echo "Cleaning up unused Docker images..."
+            docker image prune -f
+
+            echo "RealEstate backend deployment successful."
