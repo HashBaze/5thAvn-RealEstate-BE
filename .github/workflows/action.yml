@@ -37,7 +37,7 @@ jobs:
           script: |
             mkdir -p /home/tishan/apps/RealEstate
             cd /home/tishan/apps/RealEstate
-
+            
             # Pull the latest image from Docker Hub
             echo "Pulling the latest Docker image for real-estate backend..."
             docker-compose pull backend
