@@ -1,5 +1,4 @@
 require("dotenv").config();
-import mongoose from "mongoose";
 const mongoUrl = `${process.env.DB_URL}`;
 import app from "./app";
 import connectDB from "./core/dbConnection";
