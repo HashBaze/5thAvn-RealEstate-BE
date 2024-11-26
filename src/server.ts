@@ -12,7 +12,7 @@ async function mongodbConnect() {
      */
     await connectDB(mongoUrl);
     app.get("/", (req, res) => {
-      res.send("RealEstate web site is running");
+      res.send("RealEstate web site is running !");
     });
     app.listen(PORT, () => {
       console.log(`app listening on port ${PORT}`);
