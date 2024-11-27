@@ -88,7 +88,7 @@ async function handleGetSingleProperty(
 async function getByFilter(req: Request, res: Response): Promise<void> {
   let query: DocumentNode;
 
-  const {
+  let {
     bedRoomMin,
     bedRoomMax,
     houseCategory,
@@ -101,6 +101,8 @@ async function getByFilter(req: Request, res: Response): Promise<void> {
     isSelected,
     bathRooms,
   } = req.body;
+
+  houseCategory = houseCategory == "any" ? "HOUSE" : houseCategory;
 
   if (isSelected == PropertyType.SALE) {
     query = gql`
@@ -242,7 +244,7 @@ async function getByFilterByPagination(
 ): Promise<void> {
   let query: DocumentNode;
 
-  const {
+  let {
     bedRoomMin,
     bedRoomMax,
     houseCategory,
@@ -256,6 +258,9 @@ async function getByFilterByPagination(
     bathRooms,
     page = 1,
   } = req.body;
+
+  houseCategory = houseCategory == "any" ? "HOUSE" : houseCategory;
+
 
   if (isSelected == PropertyType.SALE) {
     query = gql`
