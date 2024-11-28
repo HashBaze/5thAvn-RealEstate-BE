@@ -225,3 +225,14 @@ export const GETALLLANDSALE = `{
       }
     }
 }`;
+
+export const GETSUBURB = `{
+    properties{
+        edges {
+            node {
+            formattedAddress
+            }
+        }
+    }
+}
+`;

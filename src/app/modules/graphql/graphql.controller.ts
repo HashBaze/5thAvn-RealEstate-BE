@@ -7,6 +7,7 @@ import {
   GETALLRESIDANTALRENT,
   GETALLRESIDANTALSALE,
   GETPROPERTYBYID,
+  GETSUBURB,
 } from "./graphql.querys";
 import { FilteredProperty, PropertyNode } from "./graphql.interface";
 import { PropertyFeatures, PropertyType } from "./graphql.enum";
@@ -87,6 +88,7 @@ async function handleGetSingleProperty(
 
 async function getByFilter(req: Request, res: Response): Promise<void> {
   let query: DocumentNode;
+  console.log(req.body);
 
   let {
     bedRoomMin,
@@ -145,14 +147,25 @@ async function getByFilter(req: Request, res: Response): Promise<void> {
       }))
       .filter((property: FilteredProperty) => {
         if (
-          bedRoomMin &&
-          bedRoomMax &&
-          bedRoomMin !== "any" &&
-          bedRoomMax !== "any"
+          (bedRoomMin && bedRoomMin !== "any") ||
+          (bedRoomMax && bedRoomMax !== "any")
         ) {
+          const bedrooms = property.listingDetails.bedrooms;
+
+          // Handle filtering by min only
           if (
-            property.listingDetails.bedrooms < bedRoomMin ||
-            property.listingDetails.bedrooms > bedRoomMax
+            bedRoomMin &&
+            bedRoomMin !== "any" &&
+            bedrooms <= parseInt(bedRoomMin)
+          ) {
+            return null;
+          }
+
+          // Handle filtering by max only
+          if (
+            bedRoomMax &&
+            bedRoomMax !== "any" &&
+            bedrooms >= parseInt(bedRoomMax)
           ) {
             return null;
           }
@@ -164,22 +177,21 @@ async function getByFilter(req: Request, res: Response): Promise<void> {
           }
         }
 
-        if (priceFrom && priceTo && priceFrom !== " " && priceTo !== " ") {
-          if (
-            property.price < parseInt(priceFrom) ||
-            property.price > parseInt(priceTo)
-          ) {
+        if (priceFrom && priceFrom !== " ") {
+          if (property.price < parseInt(priceFrom)) {
             return null;
           }
         }
 
-        if (suburb && suburb !== " ") {
-          if (
-            property.formattedAddress
-              .toLowerCase()
-              .includes(suburb.toLowerCase())
-          ) {
-            return property;
+        if (priceTo && priceTo !== " ") {
+          if (property.price > parseInt(priceTo)) {
+            return null;
+          }
+        }
+
+        if (suburb && suburb !== "any") {
+          if (!property.formattedAddress.split(",")[1].includes(suburb)) {
+            return null;
           }
         }
 
@@ -197,7 +209,7 @@ async function getByFilter(req: Request, res: Response): Promise<void> {
           if (
             !property.listingDetails.outdoorFeatures.includes(
               PropertyFeatures.SWIMMING_POOL_IN_GROUND
-            ) ||
+            ) &&
             !property.listingDetails.outdoorFeatures.includes(
               PropertyFeatures.SWIMMING_POOL_ABOVE_GROUND
             )
@@ -216,11 +228,13 @@ async function getByFilter(req: Request, res: Response): Promise<void> {
           }
         }
 
-        if (houseCategory && houseCategory !== " ") {
-          if (property.propertyType === houseCategory) {
-            return property;
+        if (houseCategory && houseCategory.trim() !== "any") {
+          if (property.propertyType !== houseCategory) {
+            return null;
           }
         }
+
+        return property;
       });
 
     const formattedEdges = filteredResponse.map((property) => ({
@@ -259,8 +273,12 @@ async function getByFilterByPagination(
     page = 1,
   } = req.body;
 
-  houseCategory = houseCategory == "any" ? "HOUSE" : houseCategory;
+  console.log(req.body);
 
+  houseCategory =
+    houseCategory == "any" && isSelected != PropertyType.LAND
+      ? "HOUSE"
+      : houseCategory;
 
   if (isSelected == PropertyType.SALE) {
     query = gql`
@@ -302,47 +320,60 @@ async function getByFilterByPagination(
         landSize: node.landSize,
       }))
       .filter((property: FilteredProperty) => {
-        // Apply filters
         if (
-          bedRoomMin &&
-          bedRoomMax &&
-          bedRoomMin !== "any" &&
-          bedRoomMax !== "any"
+          (bedRoomMin && bedRoomMin !== "any") ||
+          (bedRoomMax &&
+            bedRoomMax !== "any" &&
+            isSelected != PropertyType.LAND)
         ) {
+          const bedrooms = property.listingDetails.bedrooms;
+
           if (
-            property.listingDetails.bedrooms < bedRoomMin ||
-            property.listingDetails.bedrooms > bedRoomMax
+            bedRoomMin &&
+            bedRoomMin !== "any" &&
+            bedrooms < parseInt(bedRoomMin)
+          ) {
+            return null;
+          }
+
+          if (
+            bedRoomMax &&
+            bedRoomMax !== "any" &&
+            bedrooms > parseInt(bedRoomMax)
           ) {
             return null;
           }
         }
 
-        if (bathRooms && bathRooms !== "any") {
-          if (property.listingDetails.bathrooms < parseInt(bathRooms)) {
+        if (
+          bathRooms &&
+          bathRooms !== "any" &&
+          isSelected != PropertyType.LAND
+        ) {
+          if (property.listingDetails.bathrooms !== parseInt(bathRooms)) {
             return null;
           }
         }
 
-        if (priceFrom && priceTo && priceFrom !== " " && priceTo !== " ") {
-          if (
-            property.price < parseInt(priceFrom) ||
-            property.price > parseInt(priceTo)
-          ) {
+        if (priceFrom && priceFrom !== " ") {
+          if (property.price < parseInt(priceFrom)) {
             return null;
           }
         }
 
-        if (suburb && suburb !== " ") {
-          if (
-            !property.formattedAddress
-              .toLowerCase()
-              .includes(suburb.toLowerCase())
-          ) {
+        if (priceTo && priceTo !== " ") {
+          if (property.price > parseInt(priceTo)) {
             return null;
           }
         }
 
-        if (airConditioning) {
+        if (suburb && suburb !== "any") {
+          if (!property.formattedAddress.split(",")[1].includes(suburb)) {
+            return null;
+          }
+        }
+
+        if (airConditioning && isSelected != PropertyType.LAND) {
           if (
             !property.listingDetails.heatingCoolingFeatures.includes(
               PropertyFeatures.AIR_CONDITIONING
@@ -352,7 +383,7 @@ async function getByFilterByPagination(
           }
         }
 
-        if (pool) {
+        if (pool && isSelected != PropertyType.LAND) {
           if (
             !property.listingDetails.outdoorFeatures.includes(
               PropertyFeatures.SWIMMING_POOL_IN_GROUND
@@ -365,7 +396,7 @@ async function getByFilterByPagination(
           }
         }
 
-        if (secaurity) {
+        if (secaurity && isSelected != PropertyType.LAND) {
           if (
             !property.listingDetails.outdoorFeatures.includes(
               PropertyFeatures.SECURE_PARKING
@@ -375,11 +406,12 @@ async function getByFilterByPagination(
           }
         }
 
-        if (houseCategory && houseCategory !== " ") {
-          if (
-            isSelected != PropertyType.LAND &&
-            property.propertyType !== houseCategory
-          ) {
+        if (
+          houseCategory &&
+          houseCategory.trim() !== "" &&
+          isSelected != PropertyType.LAND
+        ) {
+          if (property.propertyType !== houseCategory) {
             return null;
           }
         }
@@ -418,9 +450,33 @@ async function getByFilterByPagination(
   }
 }
 
+const getSuburbByDistinct = async (req: Request, res: Response) => {
+  const query: DocumentNode = gql`
+    ${GETSUBURB}
+  `;
+
+  try {
+    const client = await createApolloClient();
+
+    const response = await client.query({
+      query,
+    });
+
+    const suburbList = response.data.properties.edges.map(
+      ({ node }: { node: PropertyNode }) => node.formattedAddress.split(",")[1]
+    );
+    const distinctSuburbList = [...new Set(suburbList)];
+
+    res.json(distinctSuburbList);
+  } catch (error) {
+    console.error("Error making GraphQL request:", (error as Error).message);
+    res.status(500).json({ message: "Failed to fetch data from GraphQL API" });
+  }
+};
 export {
   handleGraphQLRequest,
   handleGetSingleProperty,
   getByFilter,
   getByFilterByPagination,
+  getSuburbByDistinct,
 };
