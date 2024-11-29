@@ -88,7 +88,6 @@ async function handleGetSingleProperty(
 
 async function getByFilter(req: Request, res: Response): Promise<void> {
   let query: DocumentNode;
-  console.log(req.body);
 
   let {
     bedRoomMin,
@@ -273,7 +272,6 @@ async function getByFilterByPagination(
     page = 1,
   } = req.body;
 
-  console.log(req.body);
 
   houseCategory =
     houseCategory == "any" && isSelected != PropertyType.LAND
