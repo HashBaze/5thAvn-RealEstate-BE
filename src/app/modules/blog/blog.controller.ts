@@ -1,6 +1,7 @@
 import { Request, Response } from "express";
 import { IBlog } from "./blog.interface";
 import Blog from "./blog.model";
+import { logger } from "../../../utils/logger";
 
 export const createBlog = async (req: Request, res: Response) => {
   const blogInfo: IBlog = req.body;
@@ -33,6 +34,7 @@ export const createBlog = async (req: Request, res: Response) => {
       !image1 ||
       !image2
     ) {
+      logger.error("All fields are required");
       return res.status(400).json({ message: "All fields are required" });
     }
 
@@ -57,12 +59,12 @@ export const createBlog = async (req: Request, res: Response) => {
     newBlog.isShow = isShow || false;
 
     const savedBlog = await newBlog.save();
-
+    logger.debug("Blog created successfully", savedBlog);
     return res
       .status(201)
       .json({ message: "Blog created successfully", blog: savedBlog });
   } catch (error) {
-    console.error(error);
+    logger.error("An error occurred while creating the blog", error);
     return res.status(500).json({ message: "Internal server error" });
   }
 };
@@ -72,12 +74,13 @@ export const getAllBlogs = async (req: Request, res: Response) => {
     const blogs = await Blog.find();
 
     if (!blogs || blogs.length === 0) {
+      logger.error("No blogs found");
       return res.status(404).json({ message: "No blogs found" });
     }
-
+    logger.debug("Blogs fetched successfully , Length : ", blogs.length);
     return res.status(200).json(blogs);
   } catch (error) {
-    console.error(error);
+    logger.error("Internal server error", error);
     return res.status(500).json({ message: "Internal server error" });
   }
 };
@@ -89,6 +92,7 @@ export const updateBlog = async (req: Request, res: Response) => {
   try {
     const existingBlog = await Blog.findById(id);
     if (!existingBlog) {
+      logger.error("Blog not found");
       return res.status(404).json({ message: "Blog not found" });
     }
 
@@ -119,6 +123,7 @@ export const updateBlog = async (req: Request, res: Response) => {
       !image1 &&
       !image2
     ) {
+      logger.error("At least one field is required to update");
       return res
         .status(400)
         .json({ message: "At least one field is required to update" });
@@ -138,12 +143,12 @@ export const updateBlog = async (req: Request, res: Response) => {
     if (isShow !== undefined) existingBlog.isShow = isShow;
 
     const updatedBlog = await existingBlog.save();
-
+    logger.debug("Blog updated successfully", updatedBlog);
     return res
       .status(200)
       .json({ message: "Blog updated successfully", blog: updatedBlog });
   } catch (error) {
-    console.error(error);
+    logger.error("Internal server error", error);
     return res.status(500).json({ message: "Internal server error" });
   }
 };
@@ -153,6 +158,7 @@ export const updateIsShow = async (req: Request, res: Response) => {
     const { id, isShow } = req.params;
 
     if (isShow !== "true" && isShow !== "false") {
+      logger.error("isShow must be true or false");
       return res.status(400).json({ message: "isShow must be true or false" });
     }
 
@@ -163,14 +169,15 @@ export const updateIsShow = async (req: Request, res: Response) => {
     );
 
     if (!updatedBlog) {
+      logger.error("Blog not found");
       return res.status(404).json({ message: "Blog not found" });
     }
-
+    logger.debug("isShow updated successfully", updatedBlog);
     return res
       .status(200)
       .json({ message: "isShow updated successfully", blog: updatedBlog });
   } catch (error) {
-    console.error(error);
+    logger.error("Internal server error", error);
     return res.status(500).json({ message: "Internal server error" });
   }
 };
@@ -187,6 +194,8 @@ export const getBlogsByPagination = async (req: Request, res: Response) => {
 
     const totalPages = Math.ceil(totalBlogs / limit);
 
+    logger.debug("Blogs fetched successfully , Length : ", blogs.length);
+
     return res.status(200).json({
       message: "Blogs fetched successfully",
       page,
@@ -196,7 +205,7 @@ export const getBlogsByPagination = async (req: Request, res: Response) => {
       blogs,
     });
   } catch (error) {
-    console.error(error);
+    logger.error("Internal server error", error);
     return res.status(500).json({ message: "Internal server error" });
   }
 };
@@ -208,12 +217,13 @@ export const getBlogById = async (req: Request, res: Response) => {
     const blog = await Blog.findById(id);
 
     if (!blog) {
+      logger.error("Blog not found");
       return res.status(404).json({ message: "Blog not found" });
     }
-
+    logger.debug("Blog fetched successfully , Blog : ", blog.id);
     return res.status(200).json(blog);
   } catch (error) {
-    console.error(error);
+    logger.error("Internal server error", error);
     return res.status(500).json({ message: "Internal server error" });
   }
 };
@@ -225,12 +235,13 @@ export const deleteBlog = async (req: Request, res: Response) => {
     const deletedBlog = await Blog.findByIdAndDelete(id);
 
     if (!deletedBlog) {
+      logger.error("Blog not found");
       return res.status(404).json({ message: "Blog not found" });
     }
-
+    logger.debug("Blog deleted successfully", deletedBlog);
     return res.status(200).json({ message: "Blog deleted successfully" });
   } catch (error) {
-    console.error(error);
+    logger.error("Internal server error", error);
     return res.status(500).json({ message: "Internal server error" });
   }
 };
@@ -240,12 +251,13 @@ export const getRecentBlogs = async (req: Request, res: Response) => {
     const blogs = await Blog.find({ isShow: true }).sort({ date: -1 }).limit(3);
 
     if (!blogs || blogs.length === 0) {
+      logger.error("No blogs found");
       return res.status(404).json({ message: "No blogs found" });
     }
-
+    logger.debug("Recent blogs fetched successfully , Length : ", blogs.length);
     return res.status(200).json(blogs);
   } catch (error) {
-    console.error(error);
+    logger.error("Internal server error", error);
     return res.status(500).json({ message: "Internal server error" });
   }
 };
@@ -253,9 +265,10 @@ export const getRecentBlogs = async (req: Request, res: Response) => {
 export const getUniqueTags = async (req: Request, res: Response) => {
   try {
     const tags = await Blog.distinct("tags");
-    return res.status(200).json(tags); 
+    logger.debug("Tags fetched successfully , Length : ", tags.length);
+    return res.status(200).json(tags);
   } catch (error) {
-    console.error(error);
+   logger.error("Internal server error", error);
     return [];
   }
 };
@@ -265,18 +278,20 @@ export const searchBlogsByTags = async (req: Request, res: Response) => {
     const { tags } = req.body;
 
     if (!tags || tags.length === 0) {
+      logger.error("Tags are required");
       return res.status(400).json({ message: "Tags are required" });
     }
 
     const blogs = await Blog.find({ tags: { $in: tags } });
 
     if (!blogs || blogs.length === 0) {
+      logger.error("No blogs found");
       return res.status(404).json({ message: "No blogs found" });
     }
-
+    logger.debug("Blogs fetched successfully", blogs);
     return res.status(200).json(blogs);
   } catch (error) {
-    console.error(error);
+    logger.error("Internal server error", error);
     return res.status(500).json({ message: "Internal server error" });
   }
-}
+};

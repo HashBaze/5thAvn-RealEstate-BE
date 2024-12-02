@@ -11,6 +11,7 @@ import {
 } from "./graphql.querys";
 import { FilteredProperty, PropertyNode } from "./graphql.interface";
 import { PropertyFeatures, PropertyType } from "./graphql.enum";
+import { logger } from "../../../utils/logger";
 
 async function handleGraphQLRequest(
   req: Request,
@@ -38,8 +39,9 @@ async function handleGraphQLRequest(
     const sortedData = sortPropertiesByCreatedAt(response.data);
 
     res.json(sortedData);
+    logger.debug("Properties fetched successfully , Length : ", sortedData.properties.edges.length);
   } catch (error) {
-    console.error("Error making GraphQL request:", (error as Error).message);
+    logger.error("Error making GraphQL request:", (error as Error).message);
     res.status(500).json({ message: "Failed to fetch data from GraphQL API" });
   }
 }
@@ -80,8 +82,9 @@ async function handleGetSingleProperty(
     });
 
     res.json(response.data);
+    logger.debug("Property fetched successfully , Length : ", response.data.properties.edges.length);
   } catch (error) {
-    console.error("Error making GraphQL request:", (error as Error).message);
+    logger.error("Error making GraphQL request:", (error as Error).message);
     res.status(500).json({ message: "Failed to fetch data from GraphQL API" });
   }
 }
@@ -245,8 +248,9 @@ async function getByFilter(req: Request, res: Response): Promise<void> {
     };
 
     res.json(json);
+    logger.debug("Properties fetched successfully , Length : ", json.edges.length);
   } catch (error) {
-    console.error("Error making GraphQL request:", (error as Error).message);
+    logger.error("Error making GraphQL request:", (error as Error).message);
     res.status(500).json({ message: "Failed to fetch data from GraphQL API" });
   }
 }
@@ -442,8 +446,9 @@ async function getByFilterByPagination(
     };
 
     res.json(json);
+    logger.debug("Properties fetched successfully , Length : ", json.edges.length);
   } catch (error) {
-    console.error("Error making GraphQL request:", (error as Error).message);
+    logger.error("Error making GraphQL request:", (error as Error).message);
     res.status(500).json({ message: "Failed to fetch data from GraphQL API" });
   }
 }
@@ -466,8 +471,9 @@ const getSuburbByDistinct = async (req: Request, res: Response) => {
     const distinctSuburbList = [...new Set(suburbList)];
 
     res.json(distinctSuburbList);
+    logger.debug("Suburbs fetched successfully , Length : ", distinctSuburbList.length);
   } catch (error) {
-    console.error("Error making GraphQL request:", (error as Error).message);
+    logger.error("Error making GraphQL request:", (error as Error).message);
     res.status(500).json({ message: "Failed to fetch data from GraphQL API" });
   }
 };
