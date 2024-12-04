@@ -27,7 +27,6 @@ export const createBlog = async (req: Request, res: Response) => {
       !author ||
       !date ||
       !coverImage ||
-      !youtubeLink ||
       !tags ||
       !description1 ||
       !description2 ||
