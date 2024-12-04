@@ -155,7 +155,7 @@ async function getByFilter(req: Request, res: Response): Promise<void> {
           if (
             bedRoomMin &&
             bedRoomMin !== "any" &&
-            bedrooms <= parseInt(bedRoomMin)
+            bedrooms < parseInt(bedRoomMin)
           ) {
             return null;
           }
@@ -164,14 +164,14 @@ async function getByFilter(req: Request, res: Response): Promise<void> {
           if (
             bedRoomMax &&
             bedRoomMax !== "any" &&
-            bedrooms >= parseInt(bedRoomMax)
+            bedrooms > parseInt(bedRoomMax)
           ) {
             return null;
           }
         }
 
         if (bathRooms && bathRooms !== "any") {
-          if (property.listingDetails.bathrooms < parseInt(bathRooms)) {
+          if (property.listingDetails.bathrooms !== parseInt(bathRooms)) {
             return null;
           }
         }
