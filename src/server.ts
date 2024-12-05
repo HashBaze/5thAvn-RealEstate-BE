@@ -3,6 +3,7 @@ import mongoose from "mongoose";
 const mongoUrl = `${process.env.DB_URL}`;
 import app from "./app";
 import connectDB from "./core/dbConnection";
+import { logger } from "./utils/logger";
 
 const PORT = process.env.PORT || 5000;
 
@@ -16,10 +17,10 @@ async function mongodbConnect() {
       res.send("Website is running");
     });
     app.listen(PORT, () => {
-      console.log(`app listening on port ${PORT}`);
+      logger.info(`Server is running on port ${PORT}`);
     });
   } catch (e) {
-    console.log("server err", e);
+    logger.error("Error while connecting to the database", e);
   }
 }
 

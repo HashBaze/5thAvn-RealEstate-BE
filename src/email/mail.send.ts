@@ -1,3 +1,4 @@
+import { logger } from "../utils/logger";
 import transporter from "./mail.config";
 
 export const sendMail = async (
@@ -7,7 +8,6 @@ export const sendMail = async (
   name: string
 ) => {
 
-  console.log(email, subject, text, name); 
   try {
    const res =  await transporter.sendMail({
       from: email,
@@ -17,8 +17,8 @@ export const sendMail = async (
       html: `<b>Hello ${name},</b><br> ${text}`,
       replyTo: email,
     });
-    console.log("Email sent successfully",res);
+    logger.debug("Email sent successfully", res);
   } catch (error) {
-    console.log(error);
+    logger.error("Error while sending email", error);
   }
 };
