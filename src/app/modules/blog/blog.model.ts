@@ -20,7 +20,6 @@ const BlogSchema = new mongoose.Schema({
   },
   youtubeLink: {
     type: String,
-    required: true,
   },
   tags: {
     type: [String],

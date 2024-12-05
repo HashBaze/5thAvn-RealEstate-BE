@@ -1,19 +1,20 @@
 import mongoose from "mongoose";
+import { logger } from "../utils/logger";
 
 let isConnected: boolean = false;
 
 const connectDB = async (mongoUrl: string) => {
   if (isConnected) {
-    console.log("Using existing MongoDB connection");
+    logger.info("MongoDB is already connected");
     return;
   }
 
   try {
     await mongoose.connect(mongoUrl);
     isConnected = true;
-    console.log("Database connected");
+    logger.info("MongoDB is connected");
   } catch (error) {
-    console.error("Error connecting to MongoDB:", error);
+    logger.error("Error while connecting to the database", error);
     throw error;
   }
 };

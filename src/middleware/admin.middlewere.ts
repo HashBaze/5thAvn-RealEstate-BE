@@ -1,11 +1,13 @@
 import { Request, Response, NextFunction } from "express";
 import jwt from "jsonwebtoken";
 import User from "../app/modules/user/user.model";
+import { logger } from "../utils/logger";
 
 const adminVerify = async (req: Request, res: Response, next: NextFunction) => {
   try {
     const { authorization } = req.headers;
     if (!authorization) {
+      logger.error("JWT Authorization Header Missing");
       return res
         .status(403)
         .send({ message: "JWT Authorization Header Missing" });
@@ -18,6 +20,7 @@ const adminVerify = async (req: Request, res: Response, next: NextFunction) => {
     const validAdmin = await User.findOne({ email });
 
     if (!validAdmin) {
+      logger.error("Unauthorized");
       return res
         .status(403)
         .send({ message: "JWT Authorization Header Missing" });
@@ -25,9 +28,11 @@ const adminVerify = async (req: Request, res: Response, next: NextFunction) => {
     if (email) {
       next();
     } else {
+      logger.error("Unauthorized");
       return res.status(403).send({ message: "Unauthorized" });
     }
   } catch (err) {
+    logger.error(err);
     return next("Private Api");
   }
 };

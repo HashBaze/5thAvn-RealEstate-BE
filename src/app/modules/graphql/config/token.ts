@@ -1,4 +1,5 @@
 import axios from "axios";
+import { logger } from "../../../../utils/logger";
 
 let token: null = null;
 let tokenExpiresAt: number | null = null;
@@ -18,13 +19,15 @@ async function fetchToken() {
 
     token = response.data.data.token.token;
     tokenExpiresAt = response.data.data.token.expiresAt;
+    logger.debug("Token fetched successfully");
     return token;
   } catch (error) {
     if (error instanceof Error) {
-      console.error("Error fetching token:", error.message);
+      logger.error("Error fetching token:", error);
     } else {
-      console.error("Error fetching token:", error);
+      logger.error("Error fetching token:", error);
     }
+    logger.error("Failed to fetch token");
     throw new Error("Failed to fetch token");
   }
 }
