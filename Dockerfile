@@ -29,6 +29,11 @@ RUN npm ci --only=production
 # Copy built JavaScript files from the builder stage
 COPY --from=builder /app/dist ./dist
 
+# Set up the logs directory for daily rotation
+RUN mkdir logs \
+&& touch logs/RealEstate_BE.log \
+&& chmod 777 logs/RealEstate_BE.log
+
 # Expose the port the app will run on
 EXPOSE 8080
 
