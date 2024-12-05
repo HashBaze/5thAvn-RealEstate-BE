@@ -174,7 +174,7 @@ async function getByFilter(req: Request, res: Response): Promise<void> {
         }
 
         if (bathRooms && bathRooms !== "any") {
-          if (property.listingDetails.bathrooms != parseInt(bathRooms)) {
+          if (property.listingDetails.bathrooms !== parseInt(bathRooms)) {
             return null;
           }
         }
