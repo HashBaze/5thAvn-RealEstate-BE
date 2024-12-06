@@ -106,8 +106,8 @@ export const GETPROPERTYBYID: string = `
   }
 `;
 
-export const GETALLRESIDANTALSALE = `{
-    properties(listingType: [RESIDENTIAL_SALE] ,status: [SOLD]) {
+export const GETALLACTIVEPROPERTYS: string = `{
+    properties(listingType: [RESIDENTIAL_SALE] , status: [ACTIVE]) {
         totalCount
         edges {
         node {
@@ -120,8 +120,14 @@ export const GETALLRESIDANTALSALE = `{
           price
           listingType
           headline
+          listedAt
           propertyType
+          altToPrice
           thumbnailSquare
+          daysOnMarket
+          images {
+            url
+          }
           listingDetails {
             ... on ResidentialSale {
               auctionLocation
@@ -146,7 +152,7 @@ export const GETALLRESIDANTALSALE = `{
     }
 }`;
 
-export const GETALLRESIDANTALRENT = `{
+export const GETALLRESIDANTALRENT: string = `{
     properties(listingType: [RESIDENTIAL_RENTAL]) {
         totalCount
         edges {
@@ -164,6 +170,7 @@ export const GETALLRESIDANTALRENT = `{
           thumbnailSquare
           listingDetails {
             ... on ResidentialRental {
+              rentalPerWeek
               auctionLocation
               carportSpaces
               openCarSpaces
@@ -186,7 +193,7 @@ export const GETALLRESIDANTALRENT = `{
     }
 }`;
 
-export const GETALLLANDSALE = `{
+export const GETALLLANDSALE: string = `{
     properties(listingType: [LAND]) {
         totalCount
         edges {
@@ -226,7 +233,7 @@ export const GETALLLANDSALE = `{
     }
 }`;
 
-export const GETSUBURB = `{
+export const GETSUBURB: string = `{
     properties{
         edges {
             node {
@@ -236,3 +243,48 @@ export const GETSUBURB = `{
     }
 }
 `;
+
+export const GETALLSOLDPROPRTYS: string =`{
+    properties(listingType: [RESIDENTIAL_SALE] , status: [SOLD]) {
+        totalCount
+        edges {
+        node {
+          id
+          createdAt
+          formattedAddress
+          landSize
+          soldDate
+          status
+          price
+          listingType
+          headline
+          listedAt
+          propertyType
+          altToPrice
+          thumbnailSquare
+          images {
+            url
+          }
+          listingDetails {
+            ... on ResidentialSale {
+              auctionLocation
+              carportSpaces
+              openCarSpaces
+              bathrooms
+              bedrooms
+              garageSpaces
+              outdoorFeatures
+              heatingCoolingFeatures
+            }
+          }
+        }
+        cursor
+      }
+      pageInfo {
+        hasNextPage
+        hasPreviousPage
+        endCursor
+        startCursor
+      }
+    }
+}`

@@ -5,12 +5,13 @@ import {
   GETALLLANDSALE,
   GETALLPROPERTIES,
   GETALLRESIDANTALRENT,
-  GETALLRESIDANTALSALE,
+  GETALLACTIVEPROPERTYS,
   GETPROPERTYBYID,
   GETSUBURB,
+  GETALLSOLDPROPRTYS,
 } from "./graphql.querys";
 import { FilteredProperty, PropertyNode } from "./graphql.interface";
-import { PropertyFeatures, PropertyType } from "./graphql.enum";
+import { PropertyFeatures, PropertyStatus, PropertyType } from "./graphql.enum";
 import { logger } from "../../../utils/logger";
 
 async function handleGraphQLRequest(
@@ -39,7 +40,10 @@ async function handleGraphQLRequest(
     const sortedData = sortPropertiesByCreatedAt(response.data);
 
     res.json(sortedData);
-    logger.debug("Properties fetched successfully , Length : ", sortedData.properties.edges.length);
+    logger.debug(
+      "Properties fetched successfully , Length : ",
+      sortedData.properties.edges.length
+    );
   } catch (error) {
     logger.error("Error making GraphQL request:", (error as Error).message);
     res.status(500).json({ message: "Failed to fetch data from GraphQL API" });
@@ -82,7 +86,7 @@ async function handleGetSingleProperty(
     });
 
     res.json(response.data);
-    logger.debug("Property fetched successfully , Length : ", response.data.properties.edges.length);
+    logger.debug("Single Property fetched successfully ID: ", id);
   } catch (error) {
     logger.error("Error making GraphQL request:", (error as Error).message);
     res.status(500).json({ message: "Failed to fetch data from GraphQL API" });
@@ -110,7 +114,7 @@ async function getByFilter(req: Request, res: Response): Promise<void> {
 
   if (isSelected == PropertyType.SALE) {
     query = gql`
-      ${GETALLRESIDANTALSALE}
+      ${GETALLACTIVEPROPERTYS}
     `;
   } else if (isSelected == PropertyType.RENT) {
     query = gql`
@@ -135,19 +139,31 @@ async function getByFilter(req: Request, res: Response): Promise<void> {
         formattedAddress: node.formattedAddress,
         price: node.price,
         listingDetails: {
+          rentalPerWeek: node.listingDetails.rentalPerWeek,
           bedrooms: node.listingDetails.bedrooms,
           bathrooms: node.listingDetails.bathrooms,
           garageSpaces: node.listingDetails.garageSpaces,
           outdoorFeatures: node.listingDetails.outdoorFeatures,
           heatingCoolingFeatures: node.listingDetails.heatingCoolingFeatures,
         },
+        images: node.images,
         propertyType: node.propertyType,
         thumbnailSquare: node.thumbnailSquare,
         isSelected: isSelected ?? false,
         headline: node.headline,
         landSize: node.landSize,
+        status: node.status,
+        altToPrice: node.altToPrice,
+        createdAt: node.createdAt,
+        daysOnMarket: node.daysOnMarket,
       }))
       .filter((property: FilteredProperty) => {
+        if (
+          property.status === "WITHDRAWN" ||
+          (property.status === "OFF_MARKET" && isSelected == PropertyType.RENT)
+        ) {
+          return null;
+        }
         if (
           (bedRoomMin && bedRoomMin !== "any") ||
           (bedRoomMax && bedRoomMax !== "any")
@@ -237,7 +253,10 @@ async function getByFilter(req: Request, res: Response): Promise<void> {
         }
 
         return property;
-      });
+      })
+      .sort((a: { status: string }, b: { status: string }) =>
+        a.status === "ACTIVE" && b.status !== "ACTIVE" ? -1 : 1
+      );
 
     const formattedEdges = filteredResponse.map((property) => ({
       node: property,
@@ -248,7 +267,10 @@ async function getByFilter(req: Request, res: Response): Promise<void> {
     };
 
     res.json(json);
-    logger.debug("Properties fetched successfully , Length : ", json.edges.length);
+    logger.debug(
+      "Properties fetched successfully , Length : ",
+      json.edges.length
+    );
   } catch (error) {
     logger.error("Error making GraphQL request:", (error as Error).message);
     res.status(500).json({ message: "Failed to fetch data from GraphQL API" });
@@ -274,17 +296,21 @@ async function getByFilterByPagination(
     isSelected,
     bathRooms,
     page = 1,
+    status,
   } = req.body;
-
 
   houseCategory =
     houseCategory == "any" && isSelected != PropertyType.LAND
       ? "HOUSE"
       : houseCategory;
 
-  if (isSelected == PropertyType.SALE) {
+  if (isSelected == PropertyType.SALE && status == PropertyStatus.ACTIVE) {
     query = gql`
-      ${GETALLRESIDANTALSALE}
+      ${GETALLACTIVEPROPERTYS}
+    `;
+  } else if (isSelected == PropertyType.SALE && status == PropertyStatus.SOLD) {
+    query = gql`
+      ${GETALLSOLDPROPRTYS}
     `;
   } else if (isSelected == PropertyType.RENT) {
     query = gql`
@@ -308,7 +334,9 @@ async function getByFilterByPagination(
         id: node.id,
         formattedAddress: node.formattedAddress,
         price: node.price,
+        status: node.status,
         listingDetails: {
+          rentalPerWeek: node.listingDetails.rentalPerWeek,
           bedrooms: node.listingDetails.bedrooms,
           bathrooms: node.listingDetails.bathrooms,
           garageSpaces: node.listingDetails.garageSpaces,
@@ -320,8 +348,18 @@ async function getByFilterByPagination(
         isSelected: isSelected ?? false,
         headline: node.headline,
         landSize: node.landSize,
+        altToPrice: node.altToPrice,
+        listedAt: node.listedAt,
+        daysOnMarket: node.daysOnMarket,
       }))
       .filter((property: FilteredProperty) => {
+        if (
+          property.status === "WITHDRAWN" ||
+          (property.status === "OFF_MARKET" && isSelected == PropertyType.RENT)
+        ) {
+          return null;
+        }
+
         if (
           (bedRoomMin && bedRoomMin !== "any") ||
           (bedRoomMax &&
@@ -419,7 +457,20 @@ async function getByFilterByPagination(
         }
 
         return property;
-      });
+      })
+      .sort(
+        (
+          a: { status: string; daysOnMarket: any },
+          b: { status: string; daysOnMarket: any }
+        ) => (a.status === "ACTIVE" && b.status !== "ACTIVE" ? -1 : 1)
+      );
+
+    if (status == PropertyStatus.ACTIVE) {
+      filteredResponse.sort(
+        (a: { daysOnMarket: any }, b: { daysOnMarket: any }) =>
+          a.daysOnMarket - b.daysOnMarket
+      );
+    }
 
     const itemsPerPage = 10;
     const totalItems = filteredResponse.length;
@@ -446,7 +497,10 @@ async function getByFilterByPagination(
     };
 
     res.json(json);
-    logger.debug("Properties fetched successfully , Length : ", json.edges.length);
+    logger.debug(
+      "Properties fetched successfully , Length : ",
+      json.edges.length
+    );
   } catch (error) {
     logger.error("Error making GraphQL request:", (error as Error).message);
     res.status(500).json({ message: "Failed to fetch data from GraphQL API" });
@@ -471,12 +525,16 @@ const getSuburbByDistinct = async (req: Request, res: Response) => {
     const distinctSuburbList = [...new Set(suburbList)];
 
     res.json(distinctSuburbList);
-    logger.debug("Suburbs fetched successfully , Length : ", distinctSuburbList.length);
+    logger.debug(
+      "Suburbs fetched successfully , Length : ",
+      distinctSuburbList.length
+    );
   } catch (error) {
     logger.error("Error making GraphQL request:", (error as Error).message);
     res.status(500).json({ message: "Failed to fetch data from GraphQL API" });
   }
 };
+
 export {
   handleGraphQLRequest,
   handleGetSingleProperty,
