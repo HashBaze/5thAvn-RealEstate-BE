@@ -10,3 +10,8 @@ export enum PropertyFeatures {
     AIR_CONDITIONING = 'AIR_CONDITIONING',
     SECURE_PARKING = 'SECURE_PARKING',
 }
+
+export enum PropertyStatus {
+    SOLD = 'SOLD',
+    ACTIVE = 'ACTIVE',
+}
