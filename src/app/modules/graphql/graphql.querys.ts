@@ -66,6 +66,9 @@ export const GETPROPERTYBYID: string = `
       daysOnMarket
       longitude
       latitude
+       floorplans{
+        url
+      }
       listingDetails {
         ... on ResidentialSale {
           auctionLocation
@@ -153,7 +156,7 @@ export const GETALLACTIVEPROPERTYS: string = `{
 }`;
 
 export const GETALLRESIDANTALRENT: string = `{
-    properties(listingType: [RESIDENTIAL_RENTAL]) {
+    properties(listingType: [RESIDENTIAL_RENTAL], status: [ACTIVE]) {
         totalCount
         edges {
         node {
@@ -194,7 +197,7 @@ export const GETALLRESIDANTALRENT: string = `{
 }`;
 
 export const GETALLLANDSALE: string = `{
-    properties(listingType: [LAND]) {
+    properties(listingType: [LAND], status: [ACTIVE]) {
         totalCount
         edges {
         node {
