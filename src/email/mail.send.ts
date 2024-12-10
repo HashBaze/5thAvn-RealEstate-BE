@@ -1,24 +1,25 @@
 import { logger } from "../utils/logger";
+import { RENTALAPPRESALTEMPLATE } from "./email.template";
 import transporter from "./mail.config";
 
 export const sendMail = async (
-  email: string,
+  senderEmail: string,
   subject: string,
-  text: string,
-  name: string
+  textContent: object, 
+  template: any
 ) => {
-
   try {
-   const res =  await transporter.sendMail({
-      from: email,
-      to: `${process.env.MAIL_USER}`,
-      subject: subject,
-      text: text,
-      html: `<b>Hello ${name},</b><br> ${text}`,
-      replyTo: email,
+    const res = await transporter.sendMail({
+      from: senderEmail, 
+      to: `${process.env.MAIL_USER}`, 
+      subject: subject,  
+      text: JSON.stringify(textContent),  
+      html: template, 
+      replyTo: senderEmail, 
     });
-    logger.debug("Email sent successfully", res);
+
+    logger.debug("Email sent successfully", {});  
   } catch (error) {
-    logger.error("Error while sending email", error);
+    logger.error("Error while sending email", error);  
   }
 };
